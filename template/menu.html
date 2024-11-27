@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Page Header Start -->
+<div class="page-header mb-0">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <h2>{% if dish_category %} {{dish_category}} {% else %}Dishes {% endif %}({{dishes|length}})</h2>
+      </div>
+      <div class="col-12">
+        <a href="/">Home</a>
+        <a href="/dishes">Món ăn</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Page Header End -->
+
+<div class="container">
+  <h1>Menu</h1>
+  <ul class="nav nav-tabs">
+    {% for category in menu %}
+    <li class="nav-item">
+      <a class="nav-link" href="#c-{{ category.cat_id }}">{{ category.cat_name }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="tab-content">
+    {% for category in menu %}
+    <div id="c-{{ category.cat_id }}" class="tab-pane">
+      <h2>{{ category.cat_name }}</h2>
+      <div class="row">
+        {% for dish in category.items %}
+        <div class="col-md-4">
+          <div class="card">
+            <img src="/media/{{ dish.image }}" class="card-img-top" alt="{{ dish.name }}">
+            <div class="card-body">
+              <h5 class="card-title">{{ dish.name }}</h5>
+              <p class="card-text">{{ dish.ingredients }}</p>
+              <p class="card-text">Price: {{ dish.price }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

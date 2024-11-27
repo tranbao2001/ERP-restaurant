@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Page Header Start -->
+<div class="page-header mb-0">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <h2>{% if dish_category %} {{dish_category}} {% else %}Dishes {% endif %}({{dishes|length}})</h2>
+      </div>
+      <div class="col-12">
+        <a href="/">Home</a>
+        <a href="/dishes">Món ăn</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Page Header End -->
+
+<div class="container mt-5">
+  <h2>Chỉnh sửa thông tin bàn</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">Tên bàn</label>
+      <input type="text" class="form-control" value="{{ table.name }}" disabled>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Ngày đặt</label>
+      <input type="text" class="form-control" value="{{ table.current_bill.time }}" disabled>
+    </div>
+    <button type="submit" class="btn btn-success">Lưu thay đổi</button>
+    <a href="{% url 'book_table' %}" class="btn btn-secondary">Quay lại</a>
+  </form>
+</div>
+{% endblock %}

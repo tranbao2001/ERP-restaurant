@@ -1,0 +1,30 @@
+{% extends 'admin/base_site.html' %}
+{% block content %}
+  <h1>Chi tiết Phiếu Nhập Hàng #{{ purchase_order.order_number }}</h1>
+  <p><strong>Nhà Cung Cấp:</strong> {{ purchase_order.supplier.name }}</p>
+  <p><strong>Tổng Tiền:</strong> {{ purchase_order.total_amount }}</p>
+  <p><strong>Trạng Thái:</strong> {{ purchase_order.is_received|yesno:"Đã nhận,Chưa nhận" }}</p>
+  <p><strong>Ngày Tạo:</strong> {{ purchase_order.created_at }}</p>
+
+  <h2>Chi Tiết Phiếu Nhập Hàng</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Sản Phẩm</th>
+        <th>Số Lượng</th>
+        <th>Đơn Giá</th>
+        <th>Thành Tiền</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for detail in purchase_order.details.all %}
+        <tr>
+          <td>{{ detail.product.name }}</td>
+          <td>{{ detail.quantity }}</td>
+          <td>{{ detail.unit_price }}</td>
+          <td>{{ detail.total_price }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

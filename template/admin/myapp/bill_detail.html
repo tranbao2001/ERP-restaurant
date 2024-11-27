@@ -1,0 +1,72 @@
+{% extends "admin/change_form.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a> › 
+    <a href="{% url 'admin:myapp_bill_changelist' %}">Hóa đơn</a> › 
+    Chi tiết Hóa đơn #{{ bill.id }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h1 class="page-title">Chi tiết Hóa đơn #{{ bill.id }}</h1>
+    <div class="module-content">
+        <table class="table table-striped">
+            <tr>
+                <th>Bàn:</th>
+                <td>{{ bill.table.name }}</td>
+            </tr>
+            <tr>
+                <th>Khách hàng:</th>
+                <td>{{ bill.customer.user.first_name }} {{ bill.customer.user.last_name }}</td>
+            </tr>
+            <tr>
+                <th>Tổng tiền:</th>
+                <td>{{ bill.total_price|floatformat:2 }} VND</td>
+            </tr>
+            <tr>
+                <th>Trạng thái thanh toán:</th>
+                <td>
+                    {% if bill.is_payed %}
+                        <span class="text-success">Đã thanh toán</span>
+                    {% else %}
+                        <span class="text-warning">Chưa thanh toán</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Thời gian:</th>
+                <td>{{ bill.time|date:"d/m/Y H:i" }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="module">
+        <h3>Món ăn trong hóa đơn:</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Tên món</th>
+                    <th>Số lượng</th>
+                    <th>Đơn giá</th>
+                    <th>Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bill_dish in bill.billdish_set.all %}
+                <tr>
+                    <td>{{ bill_dish.dish.name }}</td>
+                    <td>{{ bill_dish.quantity }}</td>
+                    <td>{{ bill_dish.dish.price|floatformat:2 }} VND</td>
+                    <td>{{ bill_dish.quantity|floatformat:2|floatformat:2 }} x {{ bill_dish.dish.price|floatformat:2 }} = {{ bill_dish.quantity|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <a href="{% url 'admin:myapp_bill_changelist' %}" class="button">Quay lại danh sách hóa đơn</a>
+    <a href="" class="button">Thanh Toán </a>
+</div>
+{% endblock %}

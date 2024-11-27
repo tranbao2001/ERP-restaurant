@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Page Header Start -->
+<div class="page-header mb-0">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <h2>Danh sách bàn</h2>
+      </div>
+      <div class="col-12">
+        <a href="/">Home</a>
+        <a href="/book_table/">Đặt bàn</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Page Header End -->
+
+<div class="container mt-5">
+  <h3 class="mb-4">Danh sách bàn</h3>
+  <div id="my-tables-container" class="row">
+    <!-- Bàn sẽ được load qua API -->
+  </div>
+
+  <!-- Modal Form Đặt Bàn -->
+  <div class="modal fade" id="newTableModal" tabindex="-1" role="dialog" aria-labelledby="newTableModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form id="table-booking-form">
+          <div class="modal-header">
+            <h5 class="modal-title" id="newTableModalLabel">Đặt Bàn Mới</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="time">Ngày & giờ:</label>
+              <input type="datetime-local" name="time" id="time" class="form-control" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Xác nhận đặt bàn</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Chỉnh sửa -->
+  <div class="modal fade" id="editTableModal" tabindex="-1" role="dialog" aria-labelledby="editTableModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form id="edit-table-form">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editTableModalLabel">Chỉnh sửa thời gian nhận bàn</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="edit-time">Ngày & giờ mới:</label>
+              <input type="datetime-local" name="edit_time" id="edit-time" class="form-control" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Xác nhận Hủy -->
+  <div class="modal fade" id="cancelTableModal" tabindex="-1" role="dialog" aria-labelledby="cancelTableModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cancelTableModalLabel">Xác nhận hủy</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Bạn có chắc chắn muốn hủy đặt bàn này không?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" id="confirm-cancel">Hủy đặt bàn</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let cancelTableId = null;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Load danh sách bàn
+    fetch('/api/tables/')
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById('my-tables-container');
+        container.innerHTML = '';
+
+        if (data.length === 0) {
+          container.innerHTML = `<p>Không có bàn nào.</p>`;
+        } else {
+          data.forEach(table => {
+            const tableCard = `
+              <div class="col-md-4 mb-3">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Bàn: ${table.name}</h5>
+                    <p>Trạng thái: ${table.is_occupied ? 'Đã đặt' : 'Trống'}</p>
+                    ${table.is_occupied
+                ? `
+                          <button class="btn btn-warning btn-edit-table" data-id="${table.id}">Chỉnh sửa</button>
+                          <button class="btn btn-danger btn-cancel-table" data-id="${table.id}">Hủy</button>
+                        `
+                : `
+                          <button class="btn btn-primary btn-book-table" data-id="${table.id}">Đặt bàn</button>
+                        `
+              }
+                  </div>
+                </div>
+              </div>
+            `;
+            container.innerHTML += tableCard;
+          });
+
+
+          // Gắn sự kiện cho nút đặt bàn
+          document.querySelectorAll('.btn-book-table').forEach(button => {
+            button.addEventListener('click', function () {
+              const tableId = this.dataset.id;
+              document.getElementById('table-booking-form').dataset.tableId = tableId;
+              $('#newTableModal').modal('show');
+            });
+          });
+
+          // Gắn sự kiện cho nút chỉnh sửa
+          document.querySelectorAll('.btn-edit-table').forEach(button => {
+            button.addEventListener('click', function () {
+              editTableId = this.dataset.id;
+              $('#editTableModal').modal('show');
+            });
+          });
+
+          // Gắn sự kiện cho nút hủy
+          document.querySelectorAll('.btn-cancel-table').forEach(button => {
+            button.addEventListener('click', function () {
+              cancelTableId = this.dataset.id;
+              $('#cancelTableModal').modal('show');
+            });
+          });
+        }
+      });
+
+    // Xử lý form đặt bàn
+    document.getElementById('table-booking-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const tableId = this.dataset.tableId;
+      const time = document.getElementById('time').value;
+
+      fetch('/api/book_table/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ table_id: tableId, time: time })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Đặt bàn thành công!');
+            location.reload();
+          } else {
+            alert('Có lỗi xảy ra: ' + data.message);
+          }
+        });
+    });
+
+    // Xử lý form chỉnh sửa
+    document.getElementById('edit-table-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const newTime = document.getElementById('edit-time').value;
+
+      fetch(`/api/edit_table/${editTableId}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ time: newTime })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Thời gian nhận bàn đã được cập nhật!');
+            location.reload();
+          } else {
+            alert('Có lỗi xảy ra: ' + data.message);
+          }
+        });
+    });
+  });
+
+  // Xử lý hủy đặt bàn
+  document.getElementById('confirm-cancel').addEventListener('click', function () {
+    fetch(`/api/cancel_table/${cancelTableId}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Hủy đặt bàn thành công!');
+          location.reload();
+        } else {
+          alert('Có lỗi xảy ra: ' + data.message);
+        }
+      });
+  });
+</script>
+{% endblock %}
