@@ -257,8 +257,8 @@ def book_table(request):
             table.current_bill = bill
             table.save()
 
-            messages.success(request, f"Bạn đã đặt bàn {
-                             table.name} thành công!")
+            messages.success(request, f"Bạn đã đặt bàn {table.name} thành công!")
+
         except Table.DoesNotExist:
             messages.error(request, "Bàn không hợp lệ hoặc đã được đặt!")
 
