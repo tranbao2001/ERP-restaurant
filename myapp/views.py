@@ -18,7 +18,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 import json
-
+import requests
+from django.shortcuts import render
+from .models import Category, Dish
 
 def index(request):
     context = {}
@@ -339,19 +341,49 @@ class TableViewSet(viewsets.ViewSet):
             return Response({'error': 'Bàn không khả dụng hoặc đã được đặt.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# def menu(request):
+#     categories = Category.objects.all()
+#     menu = [
+#         {
+#             "cat_id": category.id,
+#             "cat_name": category.name,
+#             "cat_img": category.image.url if category.image else '',
+#             "items": Dish.objects.filter(category=category, is_available=True).values()
+#         }
+#         for category in categories
+#     ]
+#     return render(request, 'menu.html', {"menu": menu, "categories": categories})
 def menu(request):
-    categories = Category.objects.all()
-    menu = [
-        {
-            "cat_id": category.id,
-            "cat_name": category.name,
-            "cat_img": category.image.url if category.image else '',
-            "items": Dish.objects.filter(category=category, is_available=True).values()
-        }
-        for category in categories
-    ]
-    return render(request, 'menu.html', {"menu": menu, "categories": categories})
+    response = requests.get('http://127.0.0.1:8000/api/dishes/')
+    data = response.json()
 
+    # Lưu dữ liệu vào database
+    for category_data in data:
+        category, created = Category.objects.get_or_create(
+            id=category_data['category']['id'],
+            defaults={
+                'name': category_data['category']['name'],
+                'description': category_data['category']['description'],
+                'icon': category_data['category']['icon'],
+                'image': category_data['category']['image'],
+            }
+        )
+
+        Dish.objects.update_or_create(
+            id=category_data['id'],
+            defaults={
+                'name': category_data['name'],
+                'ingredients': category_data['ingredients'],
+                'price': category_data['price'],
+                'discounted_price': category_data['discounted_price'],
+                'is_available': category_data['is_available'],
+                'category': category,
+                'image': category_data['image'],
+            }
+        )
+
+    dishes = Dish.objects.filter(is_available=True)  # Lấy các món ăn có sẵn
+    return render(request, 'menu.html', {'dishes': dishes})
 
 @csrf_exempt  # Nếu bạn gặp lỗi CSRF
 @login_required
